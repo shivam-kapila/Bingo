@@ -16,6 +16,10 @@ def create_app(config_path=None, debug=None):
     if debug is not None:
         app.debug = debug
 
+    # Connect DB
+    import db
+    db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
+
     # # Static files
     # import webserver.static_manager
     # static_manager.read_manifest()
