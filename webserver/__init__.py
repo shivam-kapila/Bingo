@@ -9,6 +9,10 @@ def create_app(config_path=None, debug=None):
     """
     app = Flask(import_name=__name__)
 
+    # Add login manager
+    from webserver.login import login_manager
+    login_manager.init_app(app)
+
     # Load configs
     config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'config.py')
     app.config.from_pyfile(config_file)
@@ -26,4 +30,13 @@ def create_app(config_path=None, debug=None):
     # app.context_processor(lambda: dict(get_static_path=static_manager.get_static_path))
     # app.static_folder = '/static'
 
+    _register_blueprints(app)
     return app
+
+
+def _register_blueprints(app):
+    """ Register blueprints for the given Flask app. """
+    from webserver.views.index import index_bp
+    app.register_blueprint(index_bp)
+    from webserver.views.auth import auth_bp
+    app.register_blueprint(auth_bp, url_prefix="/auth")
