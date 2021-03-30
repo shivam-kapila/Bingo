@@ -16,3 +16,7 @@ ADMINS = []
 
 # No. of days till which the tickets are valid
 TICKET_VALIDITY = 7
+
+# Time in hours before the result to stop accepting entries
+# NOTE: In case this is updated update the compute-results.crontab file to compute results after this much duration
+TIME_TO_STOP_ACCEPTING_SUBMISSIONS = 1

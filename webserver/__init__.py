@@ -42,7 +42,5 @@ def _register_blueprints(app):
     app.register_blueprint(auth_bp, url_prefix="/auth")
     from webserver.views.admin import admin_bp
     app.register_blueprint(admin_bp, url_prefix="/admin")
-    from webserver.views.user import user_bp
-    app.register_blueprint(user_bp, url_prefix="/user")
     from webserver.views.lucky_draw import lucky_draw_bp
     app.register_blueprint(lucky_draw_bp, url_prefix="/lucky-draw")

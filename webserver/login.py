@@ -10,12 +10,11 @@ login_manager.login_view = 'auth.login'
 
 class User(UserMixin):
     """ The user mdel extending the flask login UserMixin. """
-    def __init__(self, id, name, email_id, auth_token, is_admin):
+    def __init__(self, id, name, email_id, auth_token):
         self.id = id
         self.name = name
         self.email_id = email_id
         self.auth_token = auth_token
-        self.is_admin = is_admin
 
     @classmethod
     def from_dbrow(cls, user):
@@ -25,7 +24,6 @@ class User(UserMixin):
             name=user['name'],
             email_id=user['email_id'],
             auth_token=user['auth_token'],
-            is_admin=user['email_id'] in current_app.config['ADMINS']
         )
 
 
