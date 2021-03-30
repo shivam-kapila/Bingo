@@ -3,7 +3,7 @@ SECRET_KEY = "CHANGE_ME"
 
 # Databases
 SQLALCHEMY_DATABASE_URI = "postgresql://bingo:bingo@localhost:5432/bingo"
-POSTGRES_ADMIN_URI = "postgresql://postgres:postgres@localhost/postgres"
+POSTGRES_ADMIN_URI = "postgresql://postgres:postgres@localhost:5432/postgres"
 
 # Set to True if Less should be compiled in browser. Set to False if styling is pre-compiled.
 COMPILE_LESS = True

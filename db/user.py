@@ -43,7 +43,7 @@ def get(id: int) -> Optional[dict]:
             "id": <DB ID of the user>,
             "name": <name of of the user>,
             "email_id": <email ID of the user>,
-            "auth_token": <authentication token of the user>,
+            "auth_token": <authorization token of the user>,
         }
     """
     with db.engine.connect() as connection:
@@ -67,7 +67,7 @@ def get_by_email_id_and_password(email_id: str, password: str) -> Optional[dict]
             "id": <DB ID of the user>,
             "name": <name of of the user>,
             "email_id": <email ID of the user>,
-            "auth_token": <authentication token of the user>,
+            "auth_token": <authorization token of the user>,
         }
     """
     with db.engine.connect() as connection:
@@ -79,6 +79,32 @@ def get_by_email_id_and_password(email_id: str, password: str) -> Optional[dict]
         """), {
             "email_id": email_id,
             "password": password
+        })
+        row = result.fetchone()
+        return dict(row) if row else None
+
+
+def get_by_token(auth_token: str) -> Optional[dict]:
+    """Get user with a specified authorization token.
+    Args:
+        auth_token: the Authorization
+        password: The password for the user.
+    Returns:
+        Dictionary with the following structure:
+        {
+            "id": <DB ID of the user>,
+            "name": <name of of the user>,
+            "email_id": <email ID of the user>,
+            "auth_token": <authorization token of the user>,
+        }
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id, name, email_id, auth_token
+              FROM "user"
+             WHERE auth_token = :auth_token
+        """), {
+            "auth_token": auth_token,
         })
         row = result.fetchone()
         return dict(row) if row else None

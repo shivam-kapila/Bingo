@@ -1,6 +1,6 @@
+import pytz
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, current_app, request
-from flask_login import current_user
 from sqlalchemy.exc import IntegrityError
 
 import db.lucky_draw as db_lucky_draw
@@ -10,25 +10,29 @@ from webserver.views.api_tools import validate_auth_header
 lucky_draw_bp = Blueprint("lucky_draw", __name__)
 
 
-@lucky_draw_bp.route("/get-raffle/<int:id>")
-def get_raffle(id):
-    """ Get raffle with the givem ``id``. Returns the raffle applicants too, in case the current_user is an admin.
+@lucky_draw_bp.route("/get-raffle/<int:raffle_id>")
+def get_raffle(raffle_id):
+    """ Get raffle with the givem ``raffle_id``. Returns the raffle applicants too, in case the current_user is an admin.
     Redirects:
     Returns:
-        - raffle: the raffle record for the given ``id``.
+        - raffle: the raffle record for the given ``raffle_id``.
     Status:
         - NotFound(204): if the raffle record doesn't exist.
     """
-    show_email = False
-    if current_user and current_user.is_admin:
-        show_email = True
-        raffle_applicants = db_lucky_draw.get_raffle_applicants(id=id)
+    user = validate_auth_header()
 
-    raffle = db_lucky_draw.get_raffle(id=id, show_email=show_email)
+    raffle = None
+    if user.email_id in current_app.config["ADMINS"]:
+        raffle = db_lucky_draw.get_raffle(raffle_id=raffle_id, show_email=True)
+
+        raffle_applicants = db_lucky_draw.get_raffle_applicants(raffle_id=raffle_id)
+        raffle["applicants"] = raffle_applicants
+    else:
+        raffle = db_lucky_draw.get_raffle(raffle_id=raffle_id)
+
     if not raffle:
         return(jsonify({"status": 204}))
 
-    raffle["applicants"] = raffle_applicants
     return jsonify({"raffle": raffle})
 
 
@@ -39,8 +43,10 @@ def get_past_raffles():
     Returns:
         - raffles: the list of raffles.
     """
+    user = validate_auth_header()
+
     show_email = False
-    if current_user and current_user.is_admin:
+    if user.email_id in current_app.config["ADMINS"]:
         show_email = True
 
     raffles = db_lucky_draw.get_past_raffles(show_email=show_email)
@@ -107,7 +113,11 @@ def enter_raffle(raffle_id):
     if not raffle:
         return jsonify({"status": 404, "message": "The raffle with id %s doesn't exist." % raffle_id})
 
-    if datetime.now() + timedelta(hours=current_app.config["TIME_TO_STOP_ACCEPTING_SUBMISSIONS"]) > raffle["submission_time"]:
+    # Submissions close 1 hour prior to scheduled result time
+    submission_closing_time = raffle["scheduled_at"].astimezone(pytz.UTC) - timedelta(
+        hours=current_app.config["TIME_TO_STOP_ACCEPTING_SUBMISSIONS"])
+
+    if datetime.now(pytz.UTC) > submission_closing_time:
         return jsonify({"status": 404, "message": "Entries for raffle with id %s are closed." % raffle_id})
 
     try:
@@ -129,7 +139,7 @@ def create_raffle():
         - OK(200): The raffle was successfully created.
     """
     user = validate_auth_header()
-    if user["email_id"] not in current_app.config["ADMINS"]:
+    if user.email_id not in current_app.config["ADMINS"]:
         return jsonify({"status": 401, "message": "You are not allowed to access admin APIs."})
 
     title = request.form.get("title")

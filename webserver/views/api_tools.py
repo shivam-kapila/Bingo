@@ -1,6 +1,7 @@
 from flask import request, jsonify
 
 import db.user as db_user
+from ..login import User
 
 
 def validate_auth_header():
@@ -26,4 +27,4 @@ def validate_auth_header():
     if user is None:
         return jsonify({"status": 401, "message": "Invalid authorization token."})
 
-    return user
+    return User.from_dbrow(user)

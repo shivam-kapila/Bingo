@@ -50,12 +50,12 @@ def enter_raflle(raffle_id: int, ticket_no: int, user_id: int):
                  VALUES (:raffle_id, :ticket_no, :user_id)
         """), {
             "raffle_id": raffle_id,
-            "tickey_no": ticket_no,
+            "ticket_no": ticket_no,
             "user_id": user_id,
         })
 
 
-def get_raffle(id: int, show_email: bool = False) -> Optional[dict]:
+def get_raffle(raffle_id: int, show_email: bool = False) -> Optional[dict]:
     """Get the details for a given raffle.
     Args:
         raffle_id: The DB ID of the raffle
@@ -85,17 +85,17 @@ def get_raffle(id: int, show_email: bool = False) -> Optional[dict]:
                 ON raffle.id = result.raffle_id
          LEFT JOIN "user"
                 ON result.user_id = "user".id
-             WHERE raffle.scheduled_at < NOW()
-        """.format(cols=cols)), {"id": id})
+             WHERE raffle.id = :raffle_id
+        """.format(cols=cols)), {"raffle_id": raffle_id})
 
         row = result.fetchone()
         return dict(row) if row else None
 
 
-def get_raffle_applicants(id: int) -> list:
+def get_raffle_applicants(raffle_id: int) -> list:
     """Get a list of applicants for a given raffle.
     Args:
-        raffle_id: The DB ID of the raffle   Returns:
+        raffle_id: The DB ID of the raffle
     Returns:
         A list of dictionaries with the following structure:
         [
@@ -109,15 +109,14 @@ def get_raffle_applicants(id: int) -> list:
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT name, email_id, ticket_no
+            SELECT name, email_id, ticket_no, user_id
               FROM lucky_draw.entry AS entry
          LEFT JOIN "user"
                 ON entry.user_id = "user".id
-             WHERE raffle.scheduled_at < NOW()
-        """, {"id": id}))
+             WHERE entry.raffle_id = :raffle_id
+        """), {"raffle_id": raffle_id})
 
-        row = result.fetchone()
-        return dict(row) if row else None
+        return [dict(row) for row in result.fetchall()]
 
 
 def get_past_raffles(show_email: bool = False) -> list:
@@ -140,9 +139,9 @@ def get_past_raffles(show_email: bool = False) -> list:
             ...
         ]
     """
-    cols = "title, description, prize, prize_picture_url, scheduled_at, name AS winner_name, ticket_no"
+    cols = "title, description, prize, prize_picture_url, scheduled_at, name AS winner_name, result.ticket_no AS winner_ticket_no"
     if show_email:
-        cols += ", email_id AS winner_email"
+        cols += ", email_id AS winner_email_id"
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
@@ -195,13 +194,13 @@ def draw_ticket(user_id: int) -> int:
         result = connection.execute(sqlalchemy.text("""
             INSERT INTO lucky_draw.ticket (user_id, valid_upto)
                  VALUES (:user_id, :valid_upto)
-              RETURNING id
+              RETURNING ticket_no
         """), {
             "user_id": user_id,
             "valid_upto": valid_upto,
         })
 
-        return result.fetchone()["id"]
+        return result.fetchone()["ticket_no"]
 
 
 def get_tickets_for_user(user_id: int) -> list:
@@ -221,8 +220,9 @@ def get_tickets_for_user(user_id: int) -> list:
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-              WITH (SELECT ticket_no FROM lucky_draw.entry where user_id = :user_id) AS redeemed_tickets
-            SELECT ticket_no, valid_upto, ticket_no IN redeemed_tickets AS redeemed
+            SELECT ticket_no
+                  , valid_upto
+                  , ticket_no IN (SELECT ticket_no FROM lucky_draw.entry where user_id = :user_id) AS redeemed
               FROM lucky_draw.ticket
              WHERE user_id = :user_id
         """), {"user_id": user_id})
@@ -239,14 +239,47 @@ def get_next_vaild_ticket_for_user(user_id: int) -> Optional[int]:
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-              WITH (SELECT ticket_no FROM lucky_draw.entry where user_id = :user_id) AS redeemed_tickets
-            SELECT ticket_n
+            SELECT ticket_no
               FROM lucky_draw.ticket
              WHERE user_id = :user_id
-               AND  ticket_no NOT IN redeemed_tickets AS redeemed
+               AND  ticket_no NOT IN (SELECT ticket_no FROM lucky_draw.entry where user_id = :user_id)
                AND valid_upto > NOW()
-           SORT BY created
+          ORDER BY created
+             LIMIT 1
         """), {"user_id": user_id})
 
         row = result.fetchone()
-        return dict(row) if row else None
+        return row["ticket_no"] if row else None
+
+
+def get_raffles_to_compute_results() -> list:
+    """Get a list of raffle IDs whose results are to be coomputed.
+    Returns:
+        A list of raffle IDs.
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id
+              FROM lucky_draw.raffle AS raffle
+             WHERE raffle.scheduled_at > NOW()
+               AND raffle.scheduled_at < NOW() + INTERVAL ':no_of_hours' HOUR
+        """), {"no_of_hours": config.TIME_TO_STOP_ACCEPTING_SUBMISSIONS})
+
+        return [dict(row)["id"] for row in result.fetchall()]
+
+
+def save_raffle_results(raffle_id: int, ticket_no: int, user_id: int):
+    """Save the results of a raffle.
+    Args:
+        raffle_id: The DB ID of the raffle
+        ticket_no: The winning ticket no,
+    """
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO lucky_draw.result (raffle_id, ticket_no, user_id)
+                 VALUES (:raffle_id, :ticket_no, :user_id)
+        """), {
+            "raffle_id": raffle_id,
+            "ticket_no": ticket_no,
+            "user_id": user_id,
+        })

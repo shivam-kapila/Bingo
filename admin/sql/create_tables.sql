@@ -23,7 +23,7 @@ CREATE TABLE lucky_draw.ticket (
   ticket_no             SERIAL,
   user_id               INT, -- FK to "user".id
   created               TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  vaid_upto             TIMESTAMP WITH TIME ZONE NOT NULL
+  valid_upto            TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 CREATE TABLE lucky_draw.entry (
