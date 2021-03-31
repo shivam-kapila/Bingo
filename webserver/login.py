@@ -31,7 +31,7 @@ class User(UserMixin):
 def load_user(id):
     """ Load the logged user. """
     try:
-        user = db_user.get(id=id)
+        user = db_user.get_by_token(auth_token=id)
     except Exception as e:
         current_app.logger.error("Error while getting user: %s", str(e), exc_info=True)
         return None

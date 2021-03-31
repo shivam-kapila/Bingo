@@ -26,7 +26,7 @@ function run_prod {
 
 function run_dev {
     echo "Running webpack and Flask server..."
-    npm run build:prod &
+    npm run build:dev &
     python3 manage.py run_server -d  "$@"
 }
 
