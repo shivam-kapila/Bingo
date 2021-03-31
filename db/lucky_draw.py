@@ -121,10 +121,11 @@ def get_raffle_applicants(raffle_id: int) -> list:
         return [dict(row) for row in result.fetchall()]
 
 
-def get_past_raffles(show_email: bool = False) -> list:
+def get_past_raffles(show_email: bool = False, days: int = None) -> list:
     """Get the details for a given raffle.
     Args:
         show_email (optional): Show the email of the winner, in case the details are being accessed by an admin.
+        days (optional): Limit the past raffles to past ``days`` days.
     Returns:
         A list of dictionaries with the following structure:
         [
@@ -146,8 +147,7 @@ def get_past_raffles(show_email: bool = False) -> list:
     if show_email:
         cols += ", email_id AS winner_email_id"
 
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
+    query = """
             SELECT {cols}
               FROM lucky_draw.raffle AS raffle
          LEFT JOIN lucky_draw.result AS result
@@ -155,13 +155,21 @@ def get_past_raffles(show_email: bool = False) -> list:
          LEFT JOIN "user"
                 ON result.user_id = "user".id
              WHERE raffle.closing_time < NOW()
-        """.format(cols=cols)))
+        """.format(cols=cols)
+
+    if days:
+        query += "AND raffle.closing_time > NOW() - INTERVAL ':days' DAY"
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text(query), {"days": days})
 
         return [dict(row) for row in result.fetchall()]
 
 
-def get_upcoming_raffles() -> list:
+def get_upcoming_raffles(limit: int = None) -> list:
     """Get a list of upcoming raffles.
+    Args:
+        limit: Limit the results to get only the next raffle.
     Returns:
         A list of dictionaries with the following structure:
         [
@@ -176,12 +184,17 @@ def get_upcoming_raffles() -> list:
             ...
         ]
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
+    query = """
             SELECT title, description, prize, prize_picture_url, start_time, closing_time
               FROM lucky_draw.raffle AS raffle
              WHERE raffle.start_time > NOW()
-        """))
+          ORDER BY start_time
+        """
+    if limit:
+        query += "LIMIT :limit"
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text(query), {"limit": limit})
 
         return [dict(row) for row in result.fetchall()]
 

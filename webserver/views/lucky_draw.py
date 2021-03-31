@@ -36,7 +36,6 @@ def get_raffle(raffle_id):
 @lucky_draw_bp.route("/get-past-raffles")
 def get_past_raffles():
     """ Get a list of past raffles. Returns the winner email ID too, in case the current_user is an admin.
-    Redirects:
     Returns:
         - raffles: the list of raffles.
     """
@@ -50,6 +49,33 @@ def get_past_raffles():
     return jsonify({"raffles": raffles})
 
 
+@lucky_draw_bp.route("/get-last-week-raffles")
+def get_last_week_raffles():
+    """ Get a list of last week raffles.
+    Returns:
+        - raffles: the list of raffles.
+    """
+    user = validate_auth_header()
+
+    show_email = False
+    if user.email_id in current_app.config["ADMINS"]:
+        show_email = True
+
+    raffles = db_lucky_draw.get_past_raffles(show_email=show_email, days=7)
+    return jsonify({"raffles": raffles})
+
+
+@lucky_draw_bp.route("/get-next-raffle")
+def get_next_raffle():
+    """ Get the next raffle.
+    Redirects:
+    Returns:
+        - raffle: the next raffle.
+    """
+    raffles = db_lucky_draw.get_upcoming_raffles(limit=1)
+    return jsonify({"raffle": raffles[0]})
+
+
 @lucky_draw_bp.route("/get-upcoming-raffles")
 def get_upcoming_raffles():
     """ Get a list of upcoming raffles.
@@ -59,6 +85,7 @@ def get_upcoming_raffles():
     """
     raffles = db_lucky_draw.get_upcoming_raffles()
     return jsonify({"raffles": raffles})
+
 
 @lucky_draw_bp.route("/get-ongoing-raffles")
 def get_ongoing_raffles():
