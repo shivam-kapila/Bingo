@@ -10,30 +10,31 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def create_raffle(title: str, description: str, prize: str, prize_picture_url: str, scheduled_at: str) -> int:
+def create_raffle(title: str, description: str, prize: str, prize_picture_url: str, start_time: str, closing_time: str) -> int:
     """Create a new lucky draw raffle.
     Args:
         title: the title of he raffle
         description (optional): the description of the raffle
         prize: the prize for the raffle winner
         prize_picture_url (optional): The URL for the cover picture of the prize
-        scheduled_at: The date and time when the raffle will and and its results will be declared
+        start_time: The date and time when the raffle entries will start
+        closing_time: The date and time when the raffle entries will close.
     Returns:
         ID of newly created raffle.
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            INSERT INTO lucky_draw.raffle (title, description, prize, prize_picture_url, scheduled_at)
-                 VALUES (:title, :description, :prize, :prize_picture_url, :scheduled_at)
+            INSERT INTO lucky_draw.raffle (title, description, prize, prize_picture_url, start_time, closing_time)
+                 VALUES (:title, :description, :prize, :prize_picture_url, :start_time, :closing_time)
               RETURNING id
         """), {
             "title": title,
             "description": description,
             "prize":  prize,
             "prize_picture_url":  prize_picture_url,
-            "scheduled_at": scheduled_at,
+            "start_time": start_time,
+            "closing_time": closing_time,
         })
-        logger.error(scheduled_at)
         return result.fetchone()["id"]
 
 
@@ -67,13 +68,14 @@ def get_raffle(raffle_id: int, show_email: bool = False) -> Optional[dict]:
             "description": <raffle description>,
             "prize": <prize for the raffle winner>
             "prie_picture_url": <cover picture URL for the prize>
-            "scheduled_at": <date and time when the raffle will and and its results will be declared>,
+            "start_time": <date and time when the raffle entries will start>,
+            "closing_time": <date and time when the raffle entries will close>,
             "winner_name": <name of the raffle winner> (if result is declared)
             "winner_ticket_no": <winning ticket no.> (if result is declared)
             "winner_email_id": <email ID of the raffle winner> (if result is declared, visible only to admins)
         }
     """
-    cols = "title, description, prize, prize_picture_url, scheduled_at, name AS winner_name, ticket_no AS winner_ticket_no"
+    cols = "title, description, prize, prize_picture_url, start_time, closing_time, name AS winner_name, ticket_no AS winner_ticket_no"
     if show_email:
         cols += ", email_id AS winner_email_id"
 
@@ -131,7 +133,8 @@ def get_past_raffles(show_email: bool = False) -> list:
                 "description": <raffle description>,
                 "prize": <prize for the raffle winner>
                 "prie_picture_url": <cover picture URL for the prize>
-                "scheduled_at": <date and time when the raffle will and and its results will be declared>,
+                "start_time": <date and time when the raffle entries will start>,
+                "closing_time": <date and time when the raffle entries will close>,
                 "winner_name": <name of the raffle winner> (if result is declared)
                 "winner_ticket_no": <winning ticket no.> (if result is declared)
                 "winner_email_id": <email ID of the raffle winner> (if result is declared, visible only to admins)
@@ -139,7 +142,7 @@ def get_past_raffles(show_email: bool = False) -> list:
             ...
         ]
     """
-    cols = "title, description, prize, prize_picture_url, scheduled_at, name AS winner_name, result.ticket_no AS winner_ticket_no"
+    cols = "title, description, prize, prize_picture_url, start_time, closing_time, name AS winner_name, result.ticket_no AS winner_ticket_no"
     if show_email:
         cols += ", email_id AS winner_email_id"
 
@@ -151,7 +154,7 @@ def get_past_raffles(show_email: bool = False) -> list:
                 ON raffle.id = result.raffle_id
          LEFT JOIN "user"
                 ON result.user_id = "user".id
-             WHERE raffle.scheduled_at < NOW()
+             WHERE raffle.closing_time < NOW()
         """.format(cols=cols)))
 
         return [dict(row) for row in result.fetchall()]
@@ -167,16 +170,44 @@ def get_upcoming_raffles() -> list:
                 "description": <raffle description>,
                 "prize": <prize for the raffle winner>
                 "prie_picture_url": <cover picture URL for the prize>
-                "scheduled_at": <date and time when the raffle will and and its results will be declared>,
+                "start_time": <date and time when the raffle entries will start>,
+                 "closing_time": <date and time when the raffle entries will close>,
             },
             ...
         ]
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT title, description, prize, prize_picture_url, scheduled_at
+            SELECT title, description, prize, prize_picture_url, start_time, closing_time
               FROM lucky_draw.raffle AS raffle
-             WHERE raffle.scheduled_at > NOW()
+             WHERE raffle.start_time > NOW()
+        """))
+
+        return [dict(row) for row in result.fetchall()]
+
+
+def get_ongoing_raffles() -> list:
+    """Get a list of ongoing raffles.
+    Returns:
+        A list of dictionaries with the following structure:
+        [
+            {
+                "title": <raffle title>,
+                "description": <raffle description>,
+                "prize": <prize for the raffle winner>
+                "prie_picture_url": <cover picture URL for the prize>
+                "start_time": <date and time when the raffle entries will start>,
+                 "closing_time": <date and time when the raffle entries will close>,
+            },
+            ...
+        ]
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT title, description, prize, prize_picture_url, start_time, closing_time
+              FROM lucky_draw.raffle AS raffle
+             WHERE raffle.start_time < NOW()
+               AND raffle.closing_time > NOW()
         """))
 
         return [dict(row) for row in result.fetchall()]
@@ -264,8 +295,8 @@ def get_raffles_to_compute_results() -> list:
         result = connection.execute(sqlalchemy.text("""
             SELECT id
               FROM lucky_draw.raffle AS raffle
-             WHERE raffle.scheduled_at > NOW()
-               AND raffle.scheduled_at < NOW() + INTERVAL ':no_of_hours' HOUR
+             WHERE raffle.closing_time < NOW()
+               AND raffle.closing_time > NOW() - INTERVAL ':no_of_hours' HOUR
         """), {"no_of_hours": config.TIME_TO_STOP_ACCEPTING_SUBMISSIONS})
 
         return [dict(row)["id"] for row in result.fetchall()]

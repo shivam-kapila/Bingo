@@ -16,7 +16,8 @@ CREATE TABLE lucky_draw.raffle (
   description           TEXT,
   prize                 TEXT NOT NULL,
   prize_picture_url     TEXT,
-  scheduled_at          TIMESTAMP WITH TIME ZONE NOT NULL
+  start_time            TIMESTAMP WITH TIME ZONE NOT NULL,
+  closing_time          TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 CREATE TABLE lucky_draw.ticket (

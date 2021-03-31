@@ -60,6 +60,16 @@ def get_upcoming_raffles():
     raffles = db_lucky_draw.get_upcoming_raffles()
     return jsonify({"raffles": raffles})
 
+@lucky_draw_bp.route("/get-ongoing-raffles")
+def get_ongoing_raffles():
+    """ Get a list of ongoing raffles.
+    Redirects:
+    Returns:
+        - raffles: the list of raffles.
+    """
+    raffles = db_lucky_draw.get_ongoing_raffles()
+    return jsonify({"raffles": raffles})
+
 
 @lucky_draw_bp.route("/draw-ticket", methods=["POST", "OPTIONS"])
 def draw_ticket():
@@ -110,10 +120,7 @@ def enter_raffle(raffle_id):
         raise BadRequest("The raffle with id %s doesn't exist." % raffle_id)
 
     # Submissions close 1 hour prior to scheduled result time
-    submission_closing_time = raffle["scheduled_at"].astimezone(pytz.UTC) - timedelta(
-        hours=current_app.config["TIME_TO_STOP_ACCEPTING_SUBMISSIONS"])
-
-    if datetime.now(pytz.UTC) > submission_closing_time:
+    if datetime.now(pytz.UTC) > raffle["closing_time"]:
         raise BadRequest("Entries for raffle with id %s are closed." % raffle_id)
 
     try:
@@ -142,12 +149,16 @@ def create_raffle():
     description = request.form.get("description")
     prize = request.form.get("prize")
     prize_picture_url = request.form.get("prize_picture_url")
-    scheduled_at = request.form.get("scheduled_at")
+    start_time = request.form.get("start_time")
+    closing_time = request.form.get("closing_time")
 
-    if not title or not prize or not scheduled_at:
-        raise BadRequest("Title, Prize and Scheduled on are required.")
+    if not title or not prize or not start_time or not closing_time:
+        raise BadRequest("Title, Prize, Start time and Closing time are required.")
+
+    if start_time > closing_time:
+        raise BadRequest("Raffle closing time must be greater than start time.")
 
     raffle_id = db_lucky_draw.create_raffle(title=title, description=description, prize=prize,
-                                            prize_picture_url=prize_picture_url, scheduled_at=scheduled_at)
+                                            prize_picture_url=prize_picture_url, start_time=start_time, closing_time=closing_time)
 
     return jsonify({"status": "ok", "raffle_id": raffle_id})
