@@ -21,6 +21,8 @@ ADMIN_SQL_DIR = os.path.join(os.path.dirname(
               help="Turns debugging mode on or off. If specified, overrides "
                    "'DEBUG' value in the config file.")
 def runserver(host, port, debug=False):
+    """Runs Flask server."""
+
     application = webserver.create_app()
     run_simple(
         hostname=host,
