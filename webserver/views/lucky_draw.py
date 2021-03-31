@@ -11,10 +11,11 @@ from webserver.views.api_tools import validate_auth_header
 lucky_draw_bp = Blueprint("lucky_draw", __name__)
 
 
-@lucky_draw_bp.route("/get-raffle/<int:raffle_id>")
+@lucky_draw_bp.route("/get-raffle/<int:raffle_id>", methods=["GET", "OPTIONS"])
 def get_raffle(raffle_id):
-    """ Get raffle with the givem ``raffle_id``. Returns the raffle applicants too, in case the current_user is an admin.
-    Redirects:
+    """ Get raffle with the given ``raffle_id``. Returns the raffle applicants too, in case the user is an admin.
+    Headers:
+        Authorization: "Token auth_token"
     Returns:
         - raffle: the raffle record for the given ``raffle_id``.
     """
@@ -33,9 +34,11 @@ def get_raffle(raffle_id):
     return jsonify({"raffle": raffle})
 
 
-@lucky_draw_bp.route("/get-past-raffles")
+@lucky_draw_bp.route("/get-past-raffles", methods=["GET", "OPTIONS"])
 def get_past_raffles():
-    """ Get a list of past raffles. Returns the winner email ID too, in case the current_user is an admin.
+    """ Get a list of past raffles. Returns the winner email ID too, in case the user is an admin.
+    Headers:
+        Authorization: "Token auth_token"
     Returns:
         - raffles: the list of raffles.
     """
@@ -49,9 +52,11 @@ def get_past_raffles():
     return jsonify({"raffles": raffles})
 
 
-@lucky_draw_bp.route("/get-last-week-raffles")
+@lucky_draw_bp.route("/get-last-week-raffles", methods=["GET", "OPTIONS"])
 def get_last_week_raffles():
     """ Get a list of last week raffles.
+    Headers:
+        Authorization: "Token auth_token"
     Returns:
         - raffles: the list of raffles.
     """
@@ -65,10 +70,11 @@ def get_last_week_raffles():
     return jsonify({"raffles": raffles})
 
 
-@lucky_draw_bp.route("/get-next-raffle")
+@lucky_draw_bp.route("/get-next-raffle", methods=["GET", "OPTIONS"])
 def get_next_raffle():
     """ Get the next raffle.
-    Redirects:
+    Headers:
+        Authorization: "Token auth_token"
     Returns:
         - raffle: the next raffle.
     """
@@ -76,10 +82,11 @@ def get_next_raffle():
     return jsonify({"raffle": raffles[0]})
 
 
-@lucky_draw_bp.route("/get-upcoming-raffles")
+@lucky_draw_bp.route("/get-upcoming-raffles", methods=["GET", "OPTIONS"])
 def get_upcoming_raffles():
     """ Get a list of upcoming raffles.
-    Redirects:
+    Headers:
+        Authorization: "Token auth_token"
     Returns:
         - raffles: the list of raffles.
     """
@@ -87,10 +94,11 @@ def get_upcoming_raffles():
     return jsonify({"raffles": raffles})
 
 
-@lucky_draw_bp.route("/get-ongoing-raffles")
+@lucky_draw_bp.route("/get-ongoing-raffles", methods=["GET", "OPTIONS"])
 def get_ongoing_raffles():
     """ Get a list of ongoing raffles.
-    Redirects:
+    Headers:
+        Authorization: "Token auth_token"
     Returns:
         - raffles: the list of raffles.
     """
@@ -102,7 +110,7 @@ def get_ongoing_raffles():
 def draw_ticket():
     """ Draw a new ticket for the given user.
     Headers:
-        Authoirzation: "Token auth_token"
+        Authorization: "Token auth_token"
     Returns:
         - ticket: the newly drawn ticket.
     """
@@ -115,7 +123,7 @@ def draw_ticket():
 def get_tickets_for_user():
     """ Get a given user"s tickets.
     Headers:
-        Authoirzation: "Token auth_token"
+        Authorization: "Token auth_token"
     Returns:
         - tickets: the tickets of the given user.
     """
@@ -129,7 +137,7 @@ def enter_raffle(raffle_id):
     """ Create an entry for the given user for the raffle ``raffle_id``.
     The earliest valid non-redeemed ticket is used to enter the raffle.
     Headers:
-        Authoirzation: "Token auth_token"
+        Authorization: "Token auth_token"
     Raises:
         - BadRequest(404): The user has no valid non-redeemed tickets
         - BadRequest(404): The raffle doesn't exist
@@ -158,15 +166,16 @@ def enter_raffle(raffle_id):
     return jsonify({"status": "ok"})
 
 
-@lucky_draw_bp.route("/create-raffle", methods=["POST"])
+@lucky_draw_bp.route("/create-raffle", methods=["POST", "OPTIONS"])
 def create_raffle():
-    """ Create a new raffle. This view is admin only.
+    """ Create a new raffle. This endpoint is admin only.
         Headers:
-        Authoirzation: "Token auth_token"
+        Authorization: "Token auth_token"
     Raises:
         - BadRequest(401): The user is not an authorized admin
         - BadRequest(404): Incomplete form POSTed
-        - OK(200): The raffle was successfully created.
+    Returns:
+        - raffle_id: the id of the newly created raffle.
     """
     user = validate_auth_header()
     if user.email_id not in current_app.config["ADMINS"]:
