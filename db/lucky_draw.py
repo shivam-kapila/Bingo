@@ -182,25 +182,28 @@ def get_upcoming_raffles() -> list:
         return [dict(row) for row in result.fetchall()]
 
 
-def draw_ticket(user_id: int) -> int:
+def draw_ticket(user_id: int) -> dict:
     """Insert a new ticket for the given user.
     Args:
         user_id (int): the DB ID of the user.
     Returns:
-        ID of newly created ticket.
+        {
+            "ticket_no": <ticket no.>,
+            "valid_upto": <date and time till which the ticket is valid>,
+        },
     """
     valid_upto = datetime.now() + timedelta(days=config.TICKET_VALIDITY)
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             INSERT INTO lucky_draw.ticket (user_id, valid_upto)
                  VALUES (:user_id, :valid_upto)
-              RETURNING ticket_no
+              RETURNING ticket_no, valid_upto
         """), {
             "user_id": user_id,
             "valid_upto": valid_upto,
         })
 
-        return result.fetchone()["ticket_no"]
+        return dict(result.fetchone())
 
 
 def get_tickets_for_user(user_id: int) -> list:

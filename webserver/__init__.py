@@ -1,6 +1,6 @@
 import os
-from flask import Flask
-from flask_login import LoginManager
+from flask import Flask, json
+from werkzeug.exceptions import HTTPException
 
 
 def create_app(config_path=None, debug=None):
@@ -23,6 +23,25 @@ def create_app(config_path=None, debug=None):
     # Connect DB
     import db
     db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
+
+    # Error handing as JSON
+    @app.errorhandler(HTTPException)
+    def handle_exception(e):
+        """Return JSON instead of HTML for HTTP errors."""
+        # start with the correct headers and status code from the error
+        response = e.get_response()
+        # replace the body with JSON
+        response.data = json.dumps({
+            "code": e.code,
+            "name": e.name,
+            "description": e.description,
+        })
+        response.content_type = "application/json"
+        return response
+
+    class NoContent(HTTPException):
+        code = 204
+        description = 'Payment required.'
 
     # # Static files
     # import webserver.static_manager

@@ -1,7 +1,7 @@
-from flask import request, jsonify
-
+from flask import request
+from werkzeug.exceptions import Unauthorized
 import db.user as db_user
-from ..login import User
+from webserver.login import User
 
 
 def validate_auth_header():
@@ -17,14 +17,14 @@ def validate_auth_header():
 
     auth_token = request.headers.get("Authorization")
     if not auth_token:
-        return jsonify({"status": 401, "message": "You need to provide an Authorization header."})
+        raise Unauthorized("You need to provide an Authorization header.")
     try:
         auth_token = auth_token.split(" ")[1]
     except IndexError:
-        return jsonify({"status": 401, "message": "Provided Authorization header is invalid."})
+        raise Unauthorized("Provided Authorization header is invalid.")
 
     user = db_user.get_by_token(auth_token=auth_token)
     if user is None:
-        return jsonify({"status": 401, "message": "Invalid authorization token."})
+        raise Unauthorized("Invalid authorization token.")
 
     return User.from_dbrow(user)
