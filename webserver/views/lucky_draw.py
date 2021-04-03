@@ -1,5 +1,5 @@
 import pytz
-from datetime import datetime, timedelta
+from datetime import datetime
 from flask import Blueprint, jsonify, current_app, request
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import BadRequest, Conflict, Unauthorized
@@ -30,6 +30,10 @@ def get_raffle(raffle_id):
 
     else:
         raffle = db_lucky_draw.get_raffle(raffle_id=raffle_id)
+
+        if raffle:
+            raffle_entry = db_lucky_draw.get_raffle_applicants(raffle_id=raffle_id, user_id=user.id)
+            raffle["entry"] = raffle_entry[0] if raffle_entry else None
 
     return jsonify({"raffle": raffle})
 

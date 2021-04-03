@@ -94,10 +94,11 @@ def get_raffle(raffle_id: int, show_email: bool = False) -> Optional[dict]:
         return dict(row) if row else None
 
 
-def get_raffle_applicants(raffle_id: int) -> list:
+def get_raffle_applicants(raffle_id: int, user_id: int = None) -> list:
     """Get a list of applicants for a given raffle.
     Args:
         raffle_id: The DB ID of the raffle
+        user_id (Optional): If specified return entries of the user with the specified user_id.
     Returns:
         A list of dictionaries with the following structure:
         [
@@ -109,14 +110,18 @@ def get_raffle_applicants(raffle_id: int) -> list:
         ...
         ]
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
+    query = """
             SELECT name, email_id, ticket_no, user_id
               FROM lucky_draw.entry AS entry
          LEFT JOIN "user"
                 ON entry.user_id = "user".id
              WHERE entry.raffle_id = :raffle_id
-        """), {"raffle_id": raffle_id})
+        """
+    if user_id:
+        query += "AND user_id = :user_id"
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text(query), {"raffle_id": raffle_id, "user_id": user_id})
 
         return [dict(row) for row in result.fetchall()]
 
