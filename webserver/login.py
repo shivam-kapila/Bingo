@@ -9,7 +9,7 @@ login_manager.login_view = 'auth.login'
 
 
 class User(UserMixin):
-    """ The user mdel extending the flask login UserMixin. """
+    """ The user model extending the flask login UserMixin. """
     def __init__(self, id, name, email_id, auth_token):
         self.id = id
         self.name = name
@@ -31,7 +31,7 @@ class User(UserMixin):
 def load_user(id):
     """ Load the logged user. """
     try:
-        user = db_user.get_by_token(auth_token=id)
+        user = db_user.get(id=id)
     except Exception as e:
         current_app.logger.error("Error while getting user: %s", str(e), exc_info=True)
         return None

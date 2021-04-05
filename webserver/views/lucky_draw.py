@@ -11,7 +11,7 @@ from webserver.views.api_tools import validate_auth_header
 lucky_draw_bp = Blueprint("lucky_draw", __name__)
 
 
-@lucky_draw_bp.route("/get-raffle/<int:raffle_id>", methods=["GET", "OPTIONS"])
+@lucky_draw_bp.route("/raffle/<int:raffle_id>", methods=["GET", "OPTIONS"])
 def get_raffle(raffle_id):
     """ Get raffle with the given ``raffle_id``. Returns the raffle applicants too, in case the user is an admin.
     Headers:
@@ -38,7 +38,7 @@ def get_raffle(raffle_id):
     return jsonify({"raffle": raffle})
 
 
-@lucky_draw_bp.route("/get-past-raffles", methods=["GET", "OPTIONS"])
+@lucky_draw_bp.route("/past-raffles", methods=["GET", "OPTIONS"])
 def get_past_raffles():
     """ Get a list of past raffles. Returns the winner email ID too, in case the user is an admin.
     Headers:
@@ -56,7 +56,7 @@ def get_past_raffles():
     return jsonify({"raffles": raffles})
 
 
-@lucky_draw_bp.route("/get-last-week-raffles", methods=["GET", "OPTIONS"])
+@lucky_draw_bp.route("/last-week-raffles", methods=["GET", "OPTIONS"])
 def get_last_week_raffles():
     """ Get a list of last week raffles.
     Headers:
@@ -74,7 +74,7 @@ def get_last_week_raffles():
     return jsonify({"raffles": raffles})
 
 
-@lucky_draw_bp.route("/get-next-raffle", methods=["GET", "OPTIONS"])
+@lucky_draw_bp.route("/next-raffle", methods=["GET", "OPTIONS"])
 def get_next_raffle():
     """ Get the next raffle.
     Headers:
@@ -86,7 +86,7 @@ def get_next_raffle():
     return jsonify({"raffle": raffles[0]})
 
 
-@lucky_draw_bp.route("/get-upcoming-raffles", methods=["GET", "OPTIONS"])
+@lucky_draw_bp.route("/upcoming-raffles", methods=["GET", "OPTIONS"])
 def get_upcoming_raffles():
     """ Get a list of upcoming raffles.
     Headers:
@@ -98,7 +98,7 @@ def get_upcoming_raffles():
     return jsonify({"raffles": raffles})
 
 
-@lucky_draw_bp.route("/get-ongoing-raffles", methods=["GET", "OPTIONS"])
+@lucky_draw_bp.route("/ongoing-raffles", methods=["GET", "OPTIONS"])
 def get_ongoing_raffles():
     """ Get a list of ongoing raffles.
     Headers:
@@ -123,7 +123,7 @@ def draw_ticket():
     return jsonify({"status": "ok", "ticket": ticket})
 
 
-@lucky_draw_bp.route("/get-tickets", methods=["GET", "OPTIONS"])
+@lucky_draw_bp.route("/tickets", methods=["GET", "OPTIONS"])
 def get_tickets_for_user():
     """ Get a given user"s tickets.
     Headers:
@@ -136,7 +136,7 @@ def get_tickets_for_user():
     return jsonify({"tickets": tickets})
 
 
-@lucky_draw_bp.route("/enter-raffle/<int:raffle_id>", methods=["POST", "OPTIONS"])
+@lucky_draw_bp.route("/raffle/<int:raffle_id>/enter", methods=["POST", "OPTIONS"])
 def enter_raffle(raffle_id):
     """ Create an entry for the given user for the raffle ``raffle_id``.
     The earliest valid non-redeemed ticket is used to enter the raffle.

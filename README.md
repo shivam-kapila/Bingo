@@ -17,16 +17,16 @@ and use one lucky draw raffle ticket to participate in a lucky draw game. Draw a
     + [Set up the results computation cron job](#set-up-the-results-computation-cron-job)
     + [Run Bingo](#run-bingo)
 - [API Endpoints](#api-endpoints)
-    + [`/luck-draw/get-raffle/<int:raffle_id>` [GET]](#--luck-draw-get-raffle--int-raffle-id----get-)
-    + [`/luck-draw/get-past-raffles` [GET]](#--luck-draw-get-past-raffles---get-)
-    + [`/luck-draw/get-last-week-raffles` [GET] [GET]](#--luck-draw-get-last-week-raffles---get---get-)
-    + [`/luck-draw/get-next-raffle` [GET]](#--luck-draw-get-next-raffle---get-)
-    + [`/get-upcoming-raffles` [GET]](#--get-upcoming-raffles---get-)
-    + [`/luck-draw/get-ongoing-raffles`[GET]](#--luck-draw-get-ongoing-raffles--get-)
-    + [`/luck-draw/draw-ticket` [POST]](#--luck-draw-draw-ticket---post-)
-    + [`/luck-draw/get-tickets` [GET]](#--luck-draw-get-tickets---get-)
-    + [`/luck-draw/enter-raffle/<int:raffle_id>` [POST]](#--luck-draw-enter-raffle--int-raffle-id----post-)
-    + [`/luck-draw/create-raffle` [POST]](#--luck-draw-create-raffle---post-)
+    + [`/lucky-draw/raffle/<int:raffle_id>` [GET]](#--lucky-draw-raffle--int-raffle-id----get-)
+    + [`/lucky-draw/past-raffles` [GET]](#--lucky-draw-past-raffles---get-)
+    + [`/lucky-draw/last-week-raffles` [GET] [GET]](#--lucky-draw-last-week-raffles---get-)
+    + [`/lucky-draw/next-raffle` [GET]](#--lucky-draw-next-raffle---get-)
+    + [`/lucky-draw/upcoming-raffles` [GET]](#--upcoming-raffles---get-)
+    + [`/lucky-draw/ongoing-raffles`[GET]](#--lucky-draw-ongoing-raffles--get-)
+    + [`/lucky-draw/draw-ticket` [POST]](#--lucky-draw-draw-ticket---post-)
+    + [`/lucky-draw/tickets` [GET]](#--lucky-draw-tickets---get-)
+    + [`/lucky-draw/raffle/<int:raffle_id>/enter` [POST]](#--lucky-draw-enter-raffle--int-raffle-id----post-)
+    + [`/lucky-draw/create-raffle` [POST]](#--lucky-draw-create-raffle---post-)
 
 
 # Setting up Bingo
@@ -105,7 +105,7 @@ or use the shorthand flags as follows:
 
 All these API endpoints require a valid Authorization Header of the form `Token <auth_token>`.
 
-### `/luck-draw/get-raffle/<int:raffle_id>` [GET]
+### `/lucky-draw/raffle/<int:raffle_id>` [GET]
 
 Get raffle with the given `raffle_id`. Returns the raffle applicants too, in case the user is an admin.
 
@@ -116,7 +116,7 @@ Get raffle with the given `raffle_id`. Returns the raffle applicants too, in cas
 - raffle: the raffle record for the given `raffle_id`.
 
 
-### `/luck-draw/get-past-raffles` [GET]
+### `/lucky-draw/past-raffles` [GET]
 
 **Headers:**
 - Authorization: `Token auth_token`
@@ -124,7 +124,7 @@ Get raffle with the given `raffle_id`. Returns the raffle applicants too, in cas
 **Returns**:
 - raffles: the list of raffles.
 
-### `/luck-draw/get-last-week-raffles` [GET] [GET]
+### `/lucky-draw/last-week-raffles` [GET]
 
 Get a list of last week raffles.
 
@@ -136,7 +136,7 @@ Get a list of last week raffles.
 
 
 
-### `/luck-draw/get-next-raffle` [GET]
+### `/lucky-draw/next-raffle` [GET]
 
 **Headers:**
 - Authorization: `Token auth_token`
@@ -147,7 +147,7 @@ Get the next raffle.
 - raffle: the next raffle.
 
 
-### `/get-upcoming-raffles` [GET]
+### `/lucky-draw/upcoming-raffles` [GET]
 Get a list of upcoming raffles.
 
 **Headers:**
@@ -156,7 +156,7 @@ Get a list of upcoming raffles.
 **Returns**:
 - raffles: the list of raffles.
 
-### `/luck-draw/get-ongoing-raffles`[GET]
+### `/lucky-draw/ongoing-raffles`[GET]
 
 Get a list of ongoing raffles.
 
@@ -168,7 +168,7 @@ Get a list of ongoing raffles.
 
 
 
-### `/luck-draw/draw-ticket` [POST]
+### `/lucky-draw/draw-ticket` [POST]
 Draw a new ticket for the given user.
 
 **Headers:**
@@ -178,7 +178,7 @@ Draw a new ticket for the given user.
 - ticket: the newly drawn ticket.
 
 
-### `/luck-draw/get-tickets` [GET]
+### `/lucky-draw/tickets` [GET]
 def get_tickets_for_user():
     """ Get a given user's tickets.
 
@@ -189,7 +189,7 @@ def get_tickets_for_user():
 - tickets: the tickets of the given user.
 
 
-### `/luck-draw/enter-raffle/<int:raffle_id>` [POST]
+### `/lucky-draw/raffle/<int:raffle_id>/enter` [POST]
 
 Create an entry for the given user for the raffle ``raffle_id``. The earliest valid non-redeemed ticket is used to enter the raffle.
 **Headers:**
@@ -203,7 +203,7 @@ Create an entry for the given user for the raffle ``raffle_id``. The earliest va
 
 
 
-### `/luck-draw/create-raffle` [POST]
+### `/lucky-draw/create-raffle` [POST]
 
 Create a new raffle. This endpoint is admin only.
 
