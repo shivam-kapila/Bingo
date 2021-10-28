@@ -19,7 +19,7 @@ and use one ticket to participate in a lucky draw game. Draw a ticket and win ex
 - [API Endpoints](#api-endpoints)
     + [`/lucky-draw/raffle/<int:raffle_id>` [GET]](#--lucky-draw-raffle--int-raffle-id----get-)
     + [`/lucky-draw/past-raffles` [GET]](#--lucky-draw-past-raffles---get-)
-    + [`/lucky-draw/last-week-raffles` [GET] [GET]](#--lucky-draw-last-week-raffles---get-)
+    + [`/lucky-draw/last-week-raffles` [GET]](#--lucky-draw-last-week-raffles---get-)
     + [`/lucky-draw/next-raffle` [GET]](#--lucky-draw-next-raffle---get-)
     + [`/lucky-draw/upcoming-raffles` [GET]](#--upcoming-raffles---get-)
     + [`/lucky-draw/ongoing-raffles`[GET]](#--lucky-draw-ongoing-raffles--get-)
@@ -179,8 +179,7 @@ Draw a new ticket for the given user.
 
 
 ### `/lucky-draw/tickets` [GET]
-def get_tickets_for_user():
-    """ Get a given user's tickets.
+""" Get a given user's tickets.
 
 **Headers:**
 - Authorization: `Token auth_token`
