@@ -3,7 +3,7 @@
 ![Bingo](/webserver/static/img/logo.png?raw=true "Bingo")
 
 Bingo is a service which allows users to get Lucky Draw Raffle tickets
-and use one lucky draw raffle ticket to participate in a lucky draw game. Draw a ticket and win exciting prizes!
+and use one ticket to participate in a lucky draw game. Draw a ticket and win exciting prizes!
 
 
 # Table of Contents
