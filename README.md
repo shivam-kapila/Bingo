@@ -78,7 +78,7 @@ In case you need to reset the database, run:
 
 ### Set up the results computation cron job
 
-The results of lucky draw raffles are calculated, by invoking the `compute_results.py` file every hour. TO setup this cron job run:
+The results of lucky draw raffles are calculated, by invoking the `compute_results.py` file every hour. To setup this cron job run:
 
 	./develop.sh cron
 
